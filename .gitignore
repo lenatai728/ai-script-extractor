@@ -1,0 +1,29 @@
+# Environment
+.env
+venv/
+__pycache__/
+*.pyc
+demo/
+
+# Uploads & processed files
+uploads/
+processed/
+
+# Audio intermediates
+*.wav
+*.mp3
+
+# Node / Frontend build
+frontend/node_modules/
+frontend/dist/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+
+# Others
+*.md.resolved
+TODO.md
