@@ -12,6 +12,7 @@ import urllib.parse
 
 from fastapi import (
     APIRouter,
+    Form,
     HTTPException,
     UploadFile,
     WebSocket,
@@ -24,6 +25,7 @@ from app.config import (
     MAX_FILE_SIZE_BYTES,
     PROCESSED_DIR,
     UPLOAD_DIR,
+    WHISPER_LANGUAGES,
 )
 from app.models import JobResult, JobStatus, Speaker
 from app.services import export
@@ -40,7 +42,10 @@ _ws_connections: dict[str, list[WebSocket]] = {}
 # ── Upload ────────────────────────────────────────────────────────────────
 
 @router.post("/upload")
-async def upload_file(file: UploadFile) -> dict[str, str]:
+async def upload_file(
+    file: UploadFile,
+    language: str = Form(default=""),
+) -> dict[str, str]:
     """Upload a video/audio file and return a new job ID."""
     if not file.filename:
         raise HTTPException(400, "No file provided.")
@@ -72,9 +77,10 @@ async def upload_file(file: UploadFile) -> dict[str, str]:
         job_id=job_id,
         status=JobStatus.PENDING,
         filename=file.filename,
+        language=language,
     )
 
-    logger.info("Uploaded %s (%.1f MB) → job %s", file.filename, size / 1e6, job_id)
+    logger.info("Uploaded %s (%.1f MB, lang=%s) → job %s", file.filename, size / 1e6, language or "auto", job_id)
     return {"job_id": job_id, "filename": file.filename}
 
 
@@ -118,12 +124,14 @@ async def websocket_process(ws: WebSocket, job_id: str) -> None:
         )
 
     try:
+        language_for_pipeline = job.language or None
         result = await loop.run_in_executor(
             None,
             process_file,
             job_id,
             job.filename,
             sync_progress,
+            language_for_pipeline,
         )
         _jobs[job_id] = result
 
@@ -145,6 +153,17 @@ async def websocket_process(ws: WebSocket, job_id: str) -> None:
             pass
     finally:
         _ws_connections.get(job_id, []).remove(ws) if ws in _ws_connections.get(job_id, []) else None
+
+
+# ── Languages ────────────────────────────────────────────────────────────
+
+@router.get("/languages")
+async def get_languages() -> list[dict[str, str]]:
+    """Return the list of supported languages for transcription."""
+    return sorted(
+        [{"name": name, "code": code} for name, code in WHISPER_LANGUAGES.items()],
+        key=lambda x: x["name"],
+    )
 
 
 # ── Get Job Result ───────────────────────────────────────────────────────

@@ -68,6 +68,7 @@ def process_file(
     job_id: str,
     filename: str,
     on_progress: ProgressCallback = _noop_progress,
+    language: str | None = None,
 ) -> JobResult:
     """
     Run the full extraction pipeline for one uploaded file.
@@ -95,8 +96,9 @@ def process_file(
         extract_audio(src_path, audio_path)
 
         # ── Step 2: Transcribe ────────────────────────────────────────
-        on_progress(JobStatus.TRANSCRIBING, 30, "Transcribing speech (this may take a moment)…")
-        transcript, duration = transcribe(audio_path)
+        lang_label = language or "auto"
+        on_progress(JobStatus.TRANSCRIBING, 30, f"Transcribing speech ({lang_label})…")
+        transcript, duration = transcribe(audio_path, language=language)
 
         # ── Step 3: Diarize ───────────────────────────────────────────
         on_progress(JobStatus.DIARIZING, 60, "Identifying speakers…")
@@ -119,6 +121,7 @@ def process_file(
             job_id=job_id,
             status=JobStatus.COMPLETE,
             filename=filename,
+            language=language or "",
             duration=duration,
             segments=merged,
             speakers=speakers,

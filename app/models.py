@@ -47,6 +47,7 @@ class JobResult(BaseModel):
     job_id: str
     status: JobStatus
     filename: str
+    language: str = ""  # language code (e.g. "en", "yue") or "" for auto
     duration: float = 0.0
     segments: list[Segment] = []
     speakers: list[Speaker] = []

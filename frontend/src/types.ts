@@ -29,15 +29,30 @@ export interface JobProgress {
     result?: JobResult;
 }
 
+export interface Language {
+    name: string;
+    code: string;
+}
+
 export interface JobResult {
     job_id: string;
     status: JobStatusType;
     filename: string;
+    language: string;
     duration: number;
     segments: Segment[];
     speakers: Speaker[];
     media_url: string;
 }
+
+/** Quick-pick languages shown as pill buttons. English is default. */
+export const QUICK_LANGUAGES: Language[] = [
+    { name: 'English', code: 'en' },
+    { name: 'Mandarin', code: 'zh' },
+    { name: 'Cantonese', code: 'yue' },
+    { name: 'Japanese', code: 'ja' },
+    { name: 'Korean', code: 'ko' },
+];
 
 export interface JobSummary {
     job_id: string;

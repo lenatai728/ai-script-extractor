@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback } from 'react';
+import LanguageSelector from './LanguageSelector';
 
 interface Props {
     onUploadComplete: (jobId: string) => void;
@@ -13,6 +14,7 @@ function formatSize(bytes: number): string {
 
 export default function UploadView({ onUploadComplete }: Props) {
     const [file, setFile] = useState<File | null>(null);
+    const [language, setLanguage] = useState('en'); // default: English
     const [dragover, setDragover] = useState(false);
     const [uploading, setUploading] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
@@ -43,6 +45,7 @@ export default function UploadView({ onUploadComplete }: Props) {
         try {
             const formData = new FormData();
             formData.append('file', file);
+            formData.append('language', language);
 
             const xhr = new XMLHttpRequest();
 
@@ -69,7 +72,7 @@ export default function UploadView({ onUploadComplete }: Props) {
             setError(err.message || 'Upload failed');
             setUploading(false);
         }
-    }, [file, onUploadComplete]);
+    }, [file, language, onUploadComplete]);
 
     return (
         <div className="upload-view">
@@ -139,6 +142,11 @@ export default function UploadView({ onUploadComplete }: Props) {
                         </button>
                     )}
                 </div>
+            )}
+
+            {/* Language Selector — shown after file pick */}
+            {file && !uploading && (
+                <LanguageSelector selected={language} onChange={setLanguage} />
             )}
 
             {/* Submit */}
