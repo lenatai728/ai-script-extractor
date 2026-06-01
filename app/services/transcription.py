@@ -10,6 +10,8 @@ from faster_whisper import WhisperModel
 
 from app.config import WHISPER_MODEL, CANTONESE_MODEL
 
+import opencc
+
 logger = logging.getLogger(__name__)
 
 # Lazy-loaded singletons – avoids reloading models on every request.
@@ -91,9 +93,12 @@ def transcribe(
 
         segments_iter, info = model.transcribe(audio_path, **transcribe_kwargs)
 
+    tc_converter = opencc.OpenCC('s2t.json')
+
     segments: list[TranscriptSegment] = []
     for seg in segments_iter:
         text = seg.text.strip()
+        text = tc_converter.convert(seg.text.strip())
         if text:
             segments.append(TranscriptSegment(
                 start=round(seg.start, 2),
