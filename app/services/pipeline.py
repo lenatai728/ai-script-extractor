@@ -60,6 +60,35 @@ def _merge_segments(
     return merged
 
 
+def _consolidate_segments(segments: list[Segment]) -> list[Segment]:
+    """
+    Merge consecutive segments that belong to the same speaker.
+
+    This dramatically improves readability by combining adjacent same-speaker
+    fragments into single, longer blocks of dialogue.  The resulting segment
+    spans from the *start* of the first fragment to the *end* of the last,
+    and the texts are joined with a single space.
+    """
+    if not segments:
+        return segments
+
+    consolidated: list[Segment] = []
+    current = segments[0].model_copy()
+
+    for seg in segments[1:]:
+        if seg.speaker == current.speaker:
+            # Same speaker – extend the current block.
+            current.end = seg.end
+            current.text = f"{current.text} {seg.text}"
+        else:
+            # Different speaker – flush the current block and start a new one.
+            consolidated.append(current)
+            current = seg.model_copy()
+
+    consolidated.append(current)  # Don't forget the last block.
+    return consolidated
+
+
 def _noop_progress(status: JobStatus, progress: float, message: str) -> None:
     pass
 
@@ -107,6 +136,7 @@ def process_file(
         # ── Step 4: Merge ─────────────────────────────────────────────
         on_progress(JobStatus.MERGING, 85, "Merging transcript with speaker data…")
         merged = _merge_segments(transcript, dia_segments)
+        merged = _consolidate_segments(merged)
 
         # Collect unique speakers.
         speaker_ids = sorted({s.speaker for s in merged})
