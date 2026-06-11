@@ -1,6 +1,6 @@
 # Multi-stage Dockerfile
 # Stage 1: build the frontend using Node
-FROM node:18-bullseye AS frontend-builder
+FROM node:22-bullseye AS frontend-builder
 WORKDIR /src/frontend
 COPY frontend/package.json frontend/package-lock.json* ./
 COPY frontend/tsconfig*.json ./
