@@ -28,7 +28,7 @@ RUN apt-get update \
 # ensure CPU-only runtime on Hugging Face Spaces
 COPY requirements.txt ./
 RUN pip install --upgrade pip setuptools wheel \
-    && pip install --index-url https://download.pytorch.org/whl/cpu torch --no-cache-dir \
+    && pip install --index-url https://download.pytorch.org/whl/cpu torch torchaudio torchcodec --no-cache-dir \
     && pip install -r requirements.txt --no-cache-dir
 
 # Copy the app source
